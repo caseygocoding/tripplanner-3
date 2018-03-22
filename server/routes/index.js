@@ -34,4 +34,23 @@ router.get('/itineraries/:id', (req, res, next) => {
   .catch(next);
 });
 
+router.post('/itineraries', (req, res, next) => {
+  let itin = Itinerary.build();
+  let items = req.body;
+
+  itinerary.setHotels([]);
+
+  itin.
+  items.forEach(item => {
+    let table = item.category; // 'hotels' --> Hotel.findby
+    let id = item.id;
+
+    if (table === 'hotels') {
+      itin;
+
+    }
+
+  });
+});
+
 module.exports = router;

@@ -1,6 +1,6 @@
-const mapboxgl = require("mapbox-gl");
-const api = require("./api");
-const buildMarker = require("./marker.js");
+const mapboxgl = require('mapbox-gl');
+const api = require('./api');
+const buildMarker = require('./marker.js');
 
 /*
  * App State
@@ -15,16 +15,16 @@ const state = {
   * Instantiate the Map
   */
 
-mapboxgl.accessToken = "pk.eyJ1IjoiY2FzZXlnb2NvZGluZyIsImEiOiJjamQxd3NrZjcwamQ0MndwYTFqcGN1MjdpIn0.5YFmc0pCXzAqd28r-IUNJQ";
+mapboxgl.accessToken = 'pk.eyJ1IjoiY2FzZXlnb2NvZGluZyIsImEiOiJjamQxd3NrZjcwamQ0MndwYTFqcGN1MjdpIn0.5YFmc0pCXzAqd28r-IUNJQ';
 
-const fullstackCoords = [-74.009, 40.705] // NY
+const fullstackCoords = [-74.009, 40.705]; // NY
 // const fullstackCoords = [-87.6320523, 41.8881084] // CHI
 
 const map = new mapboxgl.Map({
-  container: "map",
+  container: 'map',
   center: fullstackCoords,
   zoom: 12, // starting zoom
-  style: "mapbox://styles/mapbox/streets-v10" // mapbox has lots of different map styles available.
+  style: 'mapbox://styles/mapbox/streets-v10' // mapbox has lots of different map styles available.
 });
 
 /*
@@ -34,9 +34,9 @@ const map = new mapboxgl.Map({
 api.fetchAttractions().then(attractions => {
   state.attractions = attractions;
   const { hotels, restaurants, activities } = attractions;
-  hotels.forEach(hotel => makeOption(hotel, "hotels-choices"));
-  restaurants.forEach(restaurant => makeOption(restaurant, "restaurants-choices"));
-  activities.forEach(activity => makeOption(activity, "activities-choices"));
+  hotels.forEach(hotel => makeOption(hotel, 'hotels-choices'));
+  restaurants.forEach(restaurant => makeOption(restaurant, 'restaurants-choices'));
+  activities.forEach(activity => makeOption(activity, 'activities-choices'));
 });
 
 const makeOption = (attraction, selector) => {
@@ -50,10 +50,10 @@ const makeOption = (attraction, selector) => {
   */
 
 // what to do when the `+` button next to a `select` is clicked
-["hotels", "restaurants", "activities"].forEach(attractionType => {
+['hotels', 'restaurants', 'activities'].forEach(attractionType => {
   document
     .getElementById(`${attractionType}-add`)
-    .addEventListener("click", () => handleAddAttraction(attractionType));
+    .addEventListener('click', () => handleAddAttraction(attractionType));
 });
 
 // Create attraction assets (itinerary item, delete button & marker)
@@ -67,8 +67,7 @@ const handleAddAttraction = attractionType => {
   );
 
   // If this attraction is already on state, return
-  if (state.selectedAttractions.find(attraction => attraction.id === +selectedId && attraction.category === attractionType))
-    return;
+  if (state.selectedAttractions.find(attraction => attraction.id === +selectedId && attraction.category === attractionType)) {return;}
 
   //Build and add attraction
   buildAttractionAssets(attractionType, selectedAttraction);
@@ -76,12 +75,12 @@ const handleAddAttraction = attractionType => {
 
 const buildAttractionAssets = (category, attraction) => {
   // Create the Elements that will be inserted in the dom
-  const removeButton = document.createElement("button");
-  removeButton.className = "remove-btn";
-  removeButton.append("x");
+  const removeButton = document.createElement('button');
+  removeButton.className = 'remove-btn';
+  removeButton.append('x');
 
-  const itineraryItem = document.createElement("li");
-  itineraryItem.className = "itinerary-item";
+  const itineraryItem = document.createElement('li');
+  itineraryItem.className = 'itinerary-item';
   itineraryItem.append(attraction.name, removeButton);
 
   // Create the marker
@@ -97,9 +96,9 @@ const buildAttractionAssets = (category, attraction) => {
   // Animate the map
   map.flyTo({ center: attraction.place.location, zoom: 15 });
 
-  removeButton.addEventListener("click", function remove() {
+  removeButton.addEventListener('click', function remove() {
     // Stop listening for the event
-    removeButton.removeEventListener("click", remove);
+    removeButton.removeEventListener('click', remove);
 
     // Remove the current attrction from the application state
     state.selectedAttractions = state.selectedAttractions.filter(
@@ -116,3 +115,30 @@ const buildAttractionAssets = (category, attraction) => {
     map.flyTo({ center: fullstackCoords, zoom: 12.3 });
   });
 };
+
+if (location.hash) {
+  const id = location.hash.slice(1);
+  api.fetchItinerary(id)
+    .then(itineraryData => {
+      itineraryData.hotels.forEach(hotel => buildAttractionAssets('hotels', hotel));
+      itineraryData.restaurants.forEach(restaurant => buildAttractionAssets('restaurants', restaurant));
+      itineraryData.activities.forEach(activity => buildAttractionAssets('activities', activity));
+      console.log('what is state', state.selectedAttractions);
+    })
+    .catch(console.error);
+}
+
+const button = document.getElementById('saved');
+button.addEventListener('click', () => {
+  const currentItin = state.selectedAttractions;
+  fetch('/api/itineraries', {
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    method: 'post',
+    body: JSON.stringify({
+      currentItin
+    })
+  });
+})
+
